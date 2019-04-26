@@ -1,0 +1,5 @@
+.idea/
+node_modules/
+items_game.txt
+csgo_english.txt
+config.js

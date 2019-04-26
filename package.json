@@ -1,0 +1,10 @@
+{
+  "name": "CSGOFloat-DB",
+  "version": "0.0.1",
+  "dependencies": {
+    "express": "^4.16.4",
+    "node-fetch": "^2.3.0",
+    "pg": "^7.10.0",
+    "simple-vdf": "latest"
+  }
+}
