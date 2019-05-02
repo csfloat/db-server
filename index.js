@@ -1,4 +1,9 @@
-const config = require('./config');
+const optionDefinitions = [
+    { name: 'config', alias: 'c', type: String, defaultValue: './config' } // base file path directory
+];
+
+const args = require('command-line-args')(optionDefinitions);
+const config = require(args.config);
 const vdf = require('simple-vdf');
 const fs = require('fs');
 const express = require('express');
