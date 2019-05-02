@@ -10,6 +10,8 @@ class ItemParser {
     }
 
     _isWeapon(prefabName) {
+        if (prefabName === 'melee_unusual') return true;
+
         const prefab = this.itemsGame.prefabs[prefabName];
         const usedClasses = prefab && prefab.used_by_classes;
 
@@ -56,25 +58,22 @@ class ItemParser {
     _getWeaponPaints(weaponName) {
         const paints = {};
 
-        for (const setName of Object.keys(this.itemsGame.item_sets)) {
-            const setItems = Object.keys(this.itemsGame.item_sets[setName].items);
+        for (const iconId of Object.keys(this.itemsGame.alternate_icons2.weapon_icons)) {
+            const iconPath = this.itemsGame.alternate_icons2.weapon_icons[iconId].icon_path;
+            if (iconPath.indexOf(weaponName) === -1) continue;
 
-            for (const setItem of setItems) {
-                if (setItem.indexOf(weaponName) === -1) continue;
+            const parsed = iconPath.match(/econ\/default_generated\/(.*)_/)[1];
+            const paintName = parsed.replace(`${weaponName}_`, '');
 
-                const paintName = setItem.match(/\[(.*)].*/)[1];
+            const index = this._getPaintKitIndex(paintName);
 
-                const index = this._getPaintKitIndex(paintName);
-
-                if (index) {
-                    const kit = this.itemsGame.paint_kits[index];
-                    paints[index] = {
-                        name: this._getLanguageValue(kit.description_tag),
-                        min: parseFloat(kit.wear_remap_min || 0.06),
-                        max: parseFloat(kit.wear_remap_max || 0.80),
-                    };
-                }
-
+            if (index) {
+                const kit = this.itemsGame.paint_kits[index];
+                paints[index] = {
+                    name: this._getLanguageValue(kit.description_tag),
+                    min: parseFloat(kit.wear_remap_min || 0.06),
+                    max: parseFloat(kit.wear_remap_max || 0.80),
+                };
             }
         }
 
