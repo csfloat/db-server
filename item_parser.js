@@ -10,7 +10,7 @@ class ItemParser {
     }
 
     _isWeapon(prefabName) {
-        if (prefabName === 'melee_unusual') return true;
+        if (prefabName === 'melee_unusual' || prefabName === 'hands_paintable') return true;
 
         const prefab = this.itemsGame.prefabs[prefabName];
         const usedClasses = prefab && prefab.used_by_classes;
@@ -109,8 +109,18 @@ class ItemParser {
 
             if (Object.keys(paints).length === 0) continue;
 
+            let type;
+            if (weapon.prefab === 'hands_paintable') {
+                type = 'Gloves'
+            } else if (weapon.prefab === 'melee_unusual') {
+                type = 'Knives'
+            } else {
+                type = 'Weapons'
+            }
+
             weaponsResp[defIndex] = {
                 name: this._getWeaponLanguageName(defIndex),
+                type,
                 stickerAmount: this._getPrefabStickerAmount(weapon.prefab),
                 paints
             };
