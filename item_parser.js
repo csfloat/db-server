@@ -7,6 +7,28 @@ const LanguageHandler = {
     }
 };
 
+const dopplerPhases = {
+    418: 'Phase 1',
+    419: 'Phase 2',
+    420: 'Phase 3',
+    421: 'Phase 4',
+    415: 'Ruby',
+    416: 'Sapphire',
+    417: 'Black Pearl',
+    569: 'Phase 1',
+    570: 'Phase 2',
+    571: 'Phase 3',
+    572: 'Phase 4',
+    568: 'Emerald',
+    618: 'Phase 2',
+    619: 'Sapphire',
+    617: 'Black Pearl',
+    852: 'Phase 1',
+    853: 'Phase 2',
+    854: 'Phase 3',
+    855: 'Phase 4'
+};
+
 
 class ItemParser {
     constructor(itemsGame, language) {
@@ -97,8 +119,15 @@ class ItemParser {
 
             if (index) {
                 const kit = this.itemsGame.paint_kits[index];
+
+                let name = this._getLanguageValue(kit.description_tag);
+
+                if (index in dopplerPhases) {
+                    name += ` (${dopplerPhases[index]})`;
+                }
+
                 paints[index] = {
-                    name: this._getLanguageValue(kit.description_tag),
+                    name,
                     min: parseFloat(kit.wear_remap_min || 0.06),
                     max: parseFloat(kit.wear_remap_max || 0.80),
                 };
