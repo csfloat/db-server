@@ -153,7 +153,7 @@ function buildQuery(params) {
                     i: parseInt(s.i)
                 };
 
-                if (s.s) {
+                if (s.s !== undefined) {
                     sticker.s = parseInt(s.s);
                 }
 
@@ -169,7 +169,7 @@ function buildQuery(params) {
             }
 
             console.log(stickers);
-            conditions.push(`stickers @> $${conditions.length+1}`);
+            conditions.push(`stickers @> $${conditions.length + 1}`);
             values.push(JSON.stringify(stickers));
         } catch (e) {
             console.error(e);
