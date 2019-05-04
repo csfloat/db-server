@@ -1,7 +1,35 @@
+const LanguageHandler = {
+    get: function(obj, prop) {
+        return obj[prop.toLowerCase()];
+    },
+    has: function (obj, prop) {
+        return prop.toLowerCase() in obj;
+    }
+};
+
+
 class ItemParser {
     constructor(itemsGame, language) {
         this.itemsGame = itemsGame;
-        this.language = language;
+        this.language = new Proxy(this._objectKeysToLowerCase(language || {}), LanguageHandler);
+    }
+
+    /*
+        Calls toLowerCase on all object shallow keys, modifies in-place, not pure
+     */
+    _objectKeysToLowerCase(obj) {
+        const keys = Object.keys(obj);
+        let n = keys.length;
+        while (n--) {
+            const key = keys[n];
+            const lower = key.toLowerCase();
+            if (key !== lower) {
+                obj[lower] = obj[key];
+                delete obj[key];
+            }
+        }
+
+        return obj
     }
 
     _getPrefabStickerAmount(prefabName) {
