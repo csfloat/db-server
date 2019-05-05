@@ -80,6 +80,7 @@ function isInt(i) {
     stattrak: true/false
     souvenir: true/false
     paintseed: 0-999
+    rarity: 1-7
     min: 0-1
     max: 0-1
 
@@ -139,6 +140,10 @@ function buildQuery(params) {
         }
     }
 
+    if (params.rarity && isInt(params.rarity)) {
+        conditions.push(`rarity = $${conditions.length+1}`);
+        values.push(params.rarity);
+    }
 
     if (params.stickers) {
         try {
