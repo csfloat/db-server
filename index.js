@@ -277,8 +277,8 @@ function isSteamId64(id) {
 }
 
 const searchLimiter = rateLimit({
-    windowMs: CONFIG.model_rate_window || 2 * 60 * 60 * 1000, // 2 hours
-    max: CONFIG.model_rate_limit || 120,
+    windowMs: CONFIG.search_rate_window || 2 * 60 * 60 * 1000, // 2 hours
+    max: CONFIG.search_rate_limit || 120,
     headers: false,
     handler: function (req, res) {
         const timeLeft = msToTime((req.rateLimit.resetTime.getTime() - new Date().getTime()));
