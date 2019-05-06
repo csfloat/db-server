@@ -8,4 +8,5 @@ module.exports = {
     allowed_origins: [],
     search_rate_window: 2 * 60 * 60 * 1000, // 2 hours
     search_rate_limit: 120,
+    trust_proxy: false,
 };

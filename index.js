@@ -105,8 +105,7 @@ function isInt(i) {
     rarity: 1-7
     min: 0-1
     max: 0-1
-
-    TODO: Implement support for stickers
+    stickers: [{i: stickerId, s: slot number}]
  */
 function buildQuery(params) {
     const conditions = [], values = [];
