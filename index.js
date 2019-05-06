@@ -5,6 +5,7 @@ const optionDefinitions = [
 const args = require('command-line-args')(optionDefinitions);
 const config = require(args.config);
 const vdf = require('simple-vdf');
+const rateLimit = require("express-rate-limit");
 const fs = require('fs');
 const express = require('express');
 const fetch = require('node-fetch');
@@ -53,11 +54,32 @@ if (fs.existsSync('items_game.txt') && fs.existsSync('items_game.txt')) {
 
 setInterval(() => updateItems(), config.file_update_interval);
 
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET');
-    next();
-});
+if (CONFIG.trust_proxy) {
+    app.enable('trust proxy');
+}
+
+CONFIG.allowed_regex_origins = CONFIG.allowed_regex_origins || [];
+CONFIG.allowed_origins = CONFIG.allowed_origins || [];
+const allowedRegexOrigins = CONFIG.allowed_regex_origins.map((origin) => new RegExp(origin));
+
+function EnsureOrigin(req, res, next) {
+    // Allow some origins
+    if ((CONFIG.allowed_origins.length > 0 || CONFIG.allowed_regex_origins.length > 0)) {
+        // check to see if its a valid domain
+        const allowed = CONFIG.allowed_origins.indexOf(req.get('origin')) > -1 ||
+            allowedRegexOrigins.findIndex((reg) => reg.test(req.get('origin'))) > -1;
+
+        if (allowed) {
+            res.header('Access-Control-Allow-Origin', req.get('origin'));
+            res.header('Access-Control-Allow-Methods', 'GET');
+            next();
+        } else {
+            res.status(400).json({error: 'Invalid request'});
+        }
+    }
+}
+
+app.use(EnsureOrigin);
 
 app.get('/items', (req, res) => {
     if (itemParser) {
@@ -254,8 +276,18 @@ function isSteamId64(id) {
     return instance <= 32n;
 }
 
+const searchLimiter = rateLimit({
+    windowMs: CONFIG.model_rate_window || 2 * 60 * 60 * 1000, // 2 hours
+    max: CONFIG.model_rate_limit || 120,
+    headers: false,
+    handler: function (req, res) {
+        const timeLeft = msToTime((req.rateLimit.resetTime.getTime() - new Date().getTime()));
 
-app.get('/search', async (req, res) => {
+        res.status(429).json({error: `Rate limit exceeded, please try again in ${timeLeft}`});
+    }
+});
+
+app.get('/search', searchLimiter, async (req, res) => {
     const query = buildQuery(req.query);
 
     try {
