@@ -88,29 +88,30 @@ function isInt(i) {
  */
 function buildQuery(params) {
     const conditions = [], values = [];
+    let conditionIndex = 0;
 
     if (params.defIndex && isInt(params.defIndex)) {
-        conditions.push(`defindex = $${conditions.length+1}`);
+        conditions.push(`defindex = $${++conditionIndex}`);
         values.push(params.defIndex);
     }
 
     if (params.paintIndex && isInt(params.paintIndex)) {
-        conditions.push(`paintindex = $${conditions.length+1}`);
+        conditions.push(`paintindex = $${++conditionIndex}`);
         values.push(params.paintIndex);
     }
 
     if (params.stattrak) {
-        conditions.push(`stattrak = $${conditions.length+1}`);
+        conditions.push(`stattrak = $${++conditionIndex}`);
         values.push(params.stattrak === 'true');
     }
 
     if (params.souvenir) {
-        conditions.push(`souvenir = $${conditions.length+1}`);
+        conditions.push(`souvenir = $${++conditionIndex}`);
         values.push(params.souvenir === 'true');
     }
 
     if (params.paintSeed && isInt(params.paintSeed)) {
-        conditions.push(`paintseed = $${conditions.length+1}`);
+        conditions.push(`paintseed = $${++conditionIndex}`);
         values.push(params.paintSeed);
     }
 
@@ -122,7 +123,7 @@ function buildQuery(params) {
             buf.writeFloatBE(min, 0);
             const intMin = buf.readInt32BE(0);
 
-            conditions.push(`paintwear >=  $${conditions.length+1}`);
+            conditions.push(`paintwear >=  $${++conditionIndex}`);
             values.push(intMin);
         }
     }
@@ -135,19 +136,20 @@ function buildQuery(params) {
             buf.writeFloatBE(max, 0);
             const intMax = buf.readInt32BE(0);
 
-            conditions.push(`paintwear <=  $${conditions.length+1}`);
+            conditions.push(`paintwear <=  $${++conditionIndex}`);
             values.push(intMax);
         }
     }
 
     if (params.rarity && isInt(params.rarity)) {
-        conditions.push(`rarity = $${conditions.length+1}`);
+        conditions.push(`rarity = $${++conditionIndex}`);
         values.push(params.rarity);
     }
 
     if (params.stickers) {
         try {
             const stickers = [];
+            const uniqueIds = new Set();
 
             const inputStickers = JSON.parse(params.stickers);
 
@@ -158,6 +160,8 @@ function buildQuery(params) {
                     i: parseInt(s.i)
                 };
 
+                uniqueIds.add(s.i);
+
                 if (s.s !== undefined) {
                     sticker.s = parseInt(s.s);
                 }
@@ -165,17 +169,50 @@ function buildQuery(params) {
                 stickers.push(sticker);
             }
 
+            // This seems to force postgres to use the i_stickers index if > 1 stickers, otherwise it sometimes uses
+            // the i_paintwear index and filters rows which is substantially slower if we put it all in one array
+            for (const s of stickers) {
+                conditions.push(`stickers @> $${++conditionIndex}`);
+                values.push(JSON.stringify([s]));
+            }
+
+            // Yes, I know this seems strange, why add the same value twice if there's only one sticker?
+            // This seems to get postgres' query planner to use the i_stickers index instead of i_paintwear
+            // when there's only one sticker, which is way faster
+            if (stickers.length === 1) {
+                conditions.push(`stickers @> $${++conditionIndex}`);
+                values.push(JSON.stringify([stickers[0]]));
+            }
+
+            let totalDuplicates = 0;
+
             // Add duplicate property (allows us to use the index to search sticker dupes)
             for (const sticker of stickers) {
                 const matching = stickers.filter((s) => s.i === sticker.i);
                 if (matching.length > 1 && !matching.find((s) => s.d > 1)) {
                     sticker.d = matching.length;
+                    totalDuplicates += sticker.d;
                 }
             }
 
-            console.log(stickers);
-            conditions.push(`stickers @> $${conditions.length + 1}`);
-            values.push(JSON.stringify(stickers));
+            // Patch to ensure that if a user wants to search 2 of a same sticker, we'd also include guns with 2 or more
+            // of the same one
+            // Unfortunately the DB is designed to only store the highest amount of one sticker
+            for (const sticker of stickers) {
+                if (inputStickers.length === 1) continue;
+                if (!sticker.d) continue;
+
+                const possibleExtra = 5 - uniqueIds.size + 1 - sticker.d;
+
+                const conds = [];
+                // Amount of possible stickers
+                for (let i = 0; i < possibleExtra+1; i++) {
+                    conds.push(`stickers @> $${++conditionIndex}`);
+                    values.push(JSON.stringify([{i: sticker.i, d: sticker.d+i}]));
+                }
+
+                conditions.push(`(${conds.join(' OR ')})`);
+            }
         } catch (e) {
             console.error(e);
         }
