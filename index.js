@@ -54,19 +54,19 @@ if (fs.existsSync('items_game.txt') && fs.existsSync('items_game.txt')) {
 
 setInterval(() => updateItems(), config.file_update_interval);
 
-if (CONFIG.trust_proxy) {
+if (config.trust_proxy) {
     app.enable('trust proxy');
 }
 
-CONFIG.allowed_regex_origins = CONFIG.allowed_regex_origins || [];
-CONFIG.allowed_origins = CONFIG.allowed_origins || [];
-const allowedRegexOrigins = CONFIG.allowed_regex_origins.map((origin) => new RegExp(origin));
+config.allowed_regex_origins = config.allowed_regex_origins || [];
+config.allowed_origins = config.allowed_origins || [];
+const allowedRegexOrigins = config.allowed_regex_origins.map((origin) => new RegExp(origin));
 
 function EnsureOrigin(req, res, next) {
     // Allow some origins
-    if ((CONFIG.allowed_origins.length > 0 || CONFIG.allowed_regex_origins.length > 0)) {
+    if ((config.allowed_origins.length > 0 || config.allowed_regex_origins.length > 0)) {
         // check to see if its a valid domain
-        const allowed = CONFIG.allowed_origins.indexOf(req.get('origin')) > -1 ||
+        const allowed = config.allowed_origins.indexOf(req.get('origin')) > -1 ||
             allowedRegexOrigins.findIndex((reg) => reg.test(req.get('origin'))) > -1;
 
         if (allowed) {
@@ -276,8 +276,8 @@ function isSteamId64(id) {
 }
 
 const searchLimiter = rateLimit({
-    windowMs: CONFIG.search_rate_window || 2 * 60 * 60 * 1000, // 2 hours
-    max: CONFIG.search_rate_limit || 120,
+    windowMs: config.search_rate_window || 2 * 60 * 60 * 1000, // 2 hours
+    max: config.search_rate_limit || 120,
     headers: false,
     handler: function (req, res) {
         const timeLeft = msToTime((req.rateLimit.resetTime.getTime() - new Date().getTime()));
