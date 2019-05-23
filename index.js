@@ -11,6 +11,7 @@ const express = require('express');
 const fetch = require('node-fetch');
 const { Pool } = require('pg');
 const ItemParser = require('./item_parser');
+const Counter = require('./counter');
 const app = express();
 
 const pool = new Pool({
@@ -87,6 +88,12 @@ app.get('/items', (req, res) => {
     } else {
         res.status(500).json({error: 'Item response is not initialized, new csgo update?'});
     }
+});
+
+
+const counter = new Counter(pool);
+app.get('/count', (req, res) => {
+    res.json(counter.get());
 });
 
 function isInt(i) {
