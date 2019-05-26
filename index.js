@@ -94,7 +94,7 @@ app.get('/items', (req, res) => {
 const counter = new Counter(pool);
 app.get('/count', (req, res) => {
     const countData = counter.get();
-    res.setHeader("Cache-Control", `public, max-age=${Math.ceil(counter.counterUpdateInterval/1000-
+    res.setHeader("Cache-Control", `public, s-maxage=${Math.ceil(counter.counterUpdateInterval/1000-
                                                                 (Date.now()/1000-countData.lastUpdate))}`);
     res.json(countData);
 });
