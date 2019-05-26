@@ -1,6 +1,7 @@
 class Counter {
     constructor(pool, counterUpdateInterval) {
         this.pool = pool;
+        this.counterUpdateInterval = this.counterUpdateInterval || 30000;
 
         this.updateState();
 
@@ -16,7 +17,6 @@ class Counter {
         const lastUpdate = Date.now()/1000;
         if (this.lastUpdate && this.count) {
             this.rateOfChange = (count-this.count)/(lastUpdate-this.lastUpdate);
-            console.log(this.rateOfChange);
         }
 
         this.count = count;
@@ -28,6 +28,7 @@ class Counter {
             count: parseInt(this.count),
             rate: this.rateOfChange,
             lastUpdate: this.lastUpdate,
+            updateInterval: this.counterUpdateInterval/1000
         }
     }
 }
