@@ -33,11 +33,11 @@ class ExpiringDictionary {
 }
 
 class ProfileFetcher {
-    constructor(pool, steamApiKeys) {
+    constructor(pool, steamApiKeys, cacheExpiringMs) {
         this.pool = pool;
         this.steamApiKeys = steamApiKeys;
 
-        this.cache = new utils.ExpiringDictionary(/* 15 min */ 15 * 60 * 1000);
+        this.cache = new utils.ExpiringDictionary(cacheExpiringMs);
     }
 
     async getProfilesForSteamIds(steamIds) {

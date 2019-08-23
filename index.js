@@ -19,7 +19,7 @@ const pool = new Pool({
     connectionString: config.connectionString,
 });
 
-const profileFetcher = new ProfileFetcher(pool, config.steam_api_keys);
+const profileFetcher = new ProfileFetcher(pool, config.steam_api_keys, config.steam_cache_expiring_ms);
 let itemParser;
 
 const itemUrl = `https://raw.githubusercontent.com/SteamDatabase/GameTracking-CSGO/master/csgo/scripts/items/items_game.txt`;
