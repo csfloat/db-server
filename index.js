@@ -12,12 +12,14 @@ const fetch = require('node-fetch');
 const { Pool } = require('pg');
 const ItemParser = require('./item_parser');
 const Counter = require('./counter');
+const ProfileFetcher = require('./profile_fetcher');
 const app = express();
 
 const pool = new Pool({
     connectionString: config.connectionString,
 });
 
+const profileFetcher = new ProfileFetcher(pool, config.steam_api_keys);
 let itemParser;
 
 const itemUrl = `https://raw.githubusercontent.com/SteamDatabase/GameTracking-CSGO/master/csgo/scripts/items/items_game.txt`;
@@ -64,7 +66,7 @@ config.allowed_origins = config.allowed_origins || [];
 const allowedRegexOrigins = config.allowed_regex_origins.map((origin) => new RegExp(origin));
 
 function EnsureOrigin(req, res, next) {
-    // Allow some origins
+    // Origin whitelist
     if ((config.allowed_origins.length > 0 || config.allowed_regex_origins.length > 0)) {
         // check to see if its a valid domain
         const allowed = config.allowed_origins.indexOf(req.get('origin')) > -1 ||
@@ -77,6 +79,10 @@ function EnsureOrigin(req, res, next) {
         } else {
             res.status(400).json({error: 'Invalid request'});
         }
+    } else {
+        res.header('Access-Control-Allow-Origin', req.get('origin'));
+        res.header('Access-Control-Allow-Methods', 'GET');
+        next();
     }
 }
 
@@ -301,7 +307,7 @@ app.get('/search', searchLimiter, async (req, res) => {
 
     try {
         const results = await pool.query(query);
-        const rows = results.rows.map((row) => {
+        let rows = results.rows.map((row) => {
             const buf = Buffer.alloc(4);
             buf.writeInt32BE(row.paintwear, 0);
             const floatvalue = buf.readFloatBE(0);
@@ -333,6 +339,27 @@ app.get('/search', searchLimiter, async (req, res) => {
                 paintIndex: row.paintindex,
             }
         });
+
+        if (profileFetcher.canFetch()) {
+            const steamIds = [...new Set(rows.filter(e => e.s != '0').map(e => e.s))];
+            const profiles = await profileFetcher.getProfilesForSteamIds(steamIds);
+
+            rows = rows.map(row => {
+                const profile = profiles[row.s];
+
+                if (profile) {
+                    row.avatar = profile.avatar;
+                    row.personaState = profile.personastate;
+
+                    // Patch to pass state if they are in-game
+                    if (profile.gameextrainfo) {
+                        row.personaState = 100;
+                    }
+                }
+
+                return row;
+            });
+        }
 
         res.json(rows);
     } catch (e) {

@@ -7,6 +7,8 @@
     "express-rate-limit": "^3.5.0",
     "node-fetch": "^2.3.0",
     "pg": "^7.10.0",
-    "simple-vdf": "latest"
+    "simple-vdf": "latest",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.4"
   }
 }
