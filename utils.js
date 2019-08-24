@@ -1,8 +1,9 @@
-
 class ExpiringDictionary {
     constructor(expirationMs) {
         this.dict = {};
         this.expirationMs = expirationMs;
+
+        setInterval(() => this.cleanup(), expirationMs);
     }
 
     put(key, value) {
@@ -25,6 +26,14 @@ class ExpiringDictionary {
         }
 
         return this.dict[key].data;
+    }
+
+    cleanup() {
+        for (const key of Object.keys(this.dict)) {
+            if (this.dict[key].expires < Date.now()) {
+                delete this.dict[key];
+            }
+        }
     }
 }
 
