@@ -256,7 +256,7 @@ function buildQuery(params) {
     }
 
     const statement = `SELECT * FROM items ${conditions.length > 0 ? 'WHERE' : ''} ${conditions.join(' AND ')}
-                ORDER BY paintwear ${params.order === '-1' ? 'DESC' : ''} LIMIT 200`;
+                ORDER BY paintwear ${params.order === '-1' ? 'DESC' : ''} LIMIT ${config.max_query_items || 200}`;
 
     return {
         text: statement,

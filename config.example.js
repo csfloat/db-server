@@ -11,4 +11,5 @@ module.exports = {
     trust_proxy: false,
     steam_api_keys: [],
     steam_cache_expiring_ms: 15 * 60 * 1000, // 15 min, web api cache expiry time
+    max_query_items: 200, // max items returned for query
 };
