@@ -122,6 +122,7 @@ function isInt(i) {
     min: 0-1
     max: 0-1
     stickers: [{i: stickerId, s: slot number}]
+    start: 0-5000
  */
 function buildQuery(params) {
     const conditions = [], values = [];
@@ -255,8 +256,12 @@ function buildQuery(params) {
         }
     }
 
+    const start = (params.start && parseInt(params.start) < 5000 && parseInt(params.start) >= 0) ?
+        parseInt(params.start) : 0;
+
     const statement = `SELECT * FROM items ${conditions.length > 0 ? 'WHERE' : ''} ${conditions.join(' AND ')}
-                ORDER BY paintwear ${params.order === '-1' ? 'DESC' : ''} LIMIT ${config.max_query_items || 200}`;
+                ORDER BY paintwear ${params.order === '-1' ? 'DESC' : ''} LIMIT ${config.max_query_items || 200}
+                OFFSET ${start}`;
 
     return {
         text: statement,
