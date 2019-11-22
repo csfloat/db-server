@@ -145,7 +145,10 @@ class ItemParser {
 
             const sticker = this.itemsGame.sticker_kits[stickerId];
 
-            stickers[stickerId] = this._getLanguageValue(sticker.item_name)
+            // Ignore graffiti
+            if (!sticker.name.startsWith("spray_")) {
+                stickers[stickerId] = this._getLanguageValue(sticker.item_name);
+            }
         }
 
         return stickers;
