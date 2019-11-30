@@ -13,6 +13,8 @@ const { Pool } = require('pg');
 const ItemParser = require('./item_parser');
 const Counter = require('./counter');
 const ProfileFetcher = require('./profile_fetcher');
+const rp = require('request-promise');
+
 const app = express();
 
 const pool = new Pool({
@@ -301,13 +303,40 @@ const searchLimiter = rateLimit({
     max: config.search_rate_limit || 120,
     headers: false,
     handler: function (req, res) {
-        const timeLeft = msToTime((req.rateLimit.resetTime.getTime() - new Date().getTime()));
-
-        res.status(429).json({error: `Rate limit exceeded, please try again in ${timeLeft}`});
+        res.status(429).json({error: `Rate limit exceeded, please try again later`});
     }
 });
 
-app.get('/search', searchLimiter, async (req, res) => {
+async function captchaVerifier(req, res, next) {
+    if (!config.recaptcha || !config.recaptcha.enable) {
+        next();
+        return;
+    }
+
+    if (!req.query.token) {
+        res.status(400).json({error: 'Failed to include token'});
+        return;
+    }
+
+    try {
+        const response = await rp({
+            url: `https://www.google.com/recaptcha/api/siteverify?secret=${config.recaptcha.secret}&response=${req.query.token}&remoteip=${req.ip}`,
+            json: true
+        });
+
+        if (response.success === false || response.action !== config.recaptcha.action ||
+            response.score < config.recaptcha.minScore) {
+            res.status(400).json({error: `Failed to verify recaptcha, please try again or remove ad blockers`});
+        } else {
+            next();
+        }
+    } catch (e) {
+        console.error(`Failed to verify recaptcha: ${e.toString()}`);
+        res.status(400).json({error: `Failed to verify recaptcha, please try again or remove ad blockers`});
+    }
+}
+
+app.get('/search', [searchLimiter, captchaVerifier], async (req, res) => {
     const query = buildQuery(req.query);
 
     try {

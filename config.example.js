@@ -12,4 +12,10 @@ module.exports = {
     steam_api_keys: [],
     steam_cache_expiring_ms: 15 * 60 * 1000, // 15 min, web api cache expiry time
     max_query_items: 200, // max items returned for query
+    recaptcha: {
+        enable: false,
+        secret: 'XXXXXXXXXXXXX', // Google Recaptcha V3 Secret
+        minScore: 0.2, // Minimum Score to Allow a User
+        action: 'db_query' // Name of the action to verify
+    }
 };
