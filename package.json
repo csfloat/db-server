@@ -5,7 +5,7 @@
     "command-line-args": "^5.1.1",
     "express": "^4.16.4",
     "express-rate-limit": "^3.5.0",
-    "node-fetch": "^2.3.0",
+    "node-fetch": "^2.6.7",
     "pg": "^7.10.0",
     "simple-vdf": "latest",
     "request": "^2.88.0",
